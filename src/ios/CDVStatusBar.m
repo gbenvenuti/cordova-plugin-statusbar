@@ -142,7 +142,7 @@ static const void *kStatusBarStyle = &kStatusBarStyle;
     } else {
         self.webView.scrollView.scrollsToTop = NO;
     }
- 
+
     // blank scroll view to intercept status bar taps
     UIScrollView *fakeScrollView = [[UIScrollView alloc] initWithFrame:UIScreen.mainScreen.bounds];
     fakeScrollView.delegate = self;
@@ -414,6 +414,21 @@ static const void *kStatusBarStyle = &kStatusBarStyle;
     }
 }
 
+- (void) getStatusBarHeight:(CDVInvokedUrlCommand*)command
+{
+    int height = 0;
+    if (@available(iOS 12.0, *)) {
+        height = [UIApplication sharedApplication].keyWindow.safeAreaInsets.top;
+    } else {
+        // Fallback on earlier versions
+        // NOTE: iPhone X on iOS 11 will return 0 when status bar is hidden
+        height = [UIApplication sharedApplication].statusBarFrame.size.height;
+    }
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsInt: height];
+    [pluginResult setKeepCallbackAsBool:YES];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 -(void)resizeStatusBarBackgroundView {
     CGRect statusBarFrame = [UIApplication sharedApplication].statusBarFrame;
     CGRect sbBgFrame = _statusBarBackgroundView.frame;
@@ -458,7 +473,7 @@ static const void *kStatusBarStyle = &kStatusBarStyle;
     }
     frame.size.height -= frame.origin.y;
     self.webView.frame = frame;
-    
+
 }
 
 - (void) dealloc
